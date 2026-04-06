@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Lightning, CheckCircle, Fingerprint } from '@phosphor-icons/react';
+import { 
+  ArrowRight, Lightning, CheckCircle, WhatsappLogo, 
+  CaretRight, Crown
+} from '@phosphor-icons/react';
+import mkDotInterface from './assets/mk-dotinterface.png';
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeFeature, setActiveFeature] = useState<number | null>(null);
 
-  // Link do WhatsApp com a mensagem padrão de teste
   const linkWhatsTeste = "https://wa.me/5514996392691?text=Olá,%20eu%20quero%20testar%20a%20dotweb%20por%207%20dias!%20🕑";
 
   useEffect(() => {
@@ -12,9 +17,12 @@ export default function App() {
       const precosSection = document.getElementById('precos');
       if (precosSection) {
         const rect = precosSection.getBoundingClientRect();
-        const isOverWhiteBackground = rect.top <= 80 && rect.bottom >= 80;
-        setScrolled(isOverWhiteBackground);
+        setScrolled(rect.top <= 80);
       }
+
+      const currentScrollY = window.scrollY;
+      const progress = Math.min(1, currentScrollY / 400);
+      setScrollProgress(progress);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -25,160 +33,261 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const toggleFeature = (id: number) => {
+    setActiveFeature(activeFeature === id ? null : id);
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white">
+    <div className="min-h-screen bg-white text-black font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white">
       
       <style>{`
-        /* GARANTE QUE O SCROLL DOS BOTÕES SEJA SUAVE */
         html { scroll-behavior: smooth; }
-        
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-100%); }
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
+        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; }
+        .outline-text { color: transparent; -webkit-text-stroke: 1px rgba(0,0,0,0.2); }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes phone-up { 0% { transform: translateY(100px); opacity: 0; } 100% { transform: translateY(0px); opacity: 1; } }
+        .animate-phone-up { animation: phone-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .perspective-container { perspective: 2000px; }
+
+        /* BENTO CARDS SHINE */
+        .anime-shine-card {
+          position: relative;
+          overflow: hidden;
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(15px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.4s ease;
         }
-        .animate-marquee {
-          display: inline-block;
-          white-space: nowrap;
-          animation: marquee 15s linear infinite;
+        .anime-shine-card::after {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 60%;
+          height: 100%;
+          background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent);
+          transform: skewX(-25deg);
+          transition: 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .outline-text {
-          color: transparent;
-          -webkit-text-stroke: 1px rgba(255,255,255,0.3);
+        .anime-shine-card:hover::after { left: 150%; }
+        .anime-shine-card:hover {
+          border-color: rgba(255, 255, 255, 0.35);
+          box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.06);
+          transform: translateY(-5px);
         }
-        @keyframes entrance-spin {
-          0% { transform: scale(0) rotate(-360deg); opacity: 0; }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+
+        /* EFEITO MINIMALISTA PARA O FLOW */
+        .flow-hover-card {
+          transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .animate-entrance-spin {
-          animation: entrance-spin 1.5s ease-out forwards;
+        .flow-hover-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+          border-color: rgba(0, 0, 0, 0.05);
         }
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(1deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
+
+        /* EFEITO PREMIUM GLOW (INFINITY CARD - BRANCO COM NEON AZUL) */
+        @keyframes shine-border {
+          to { background-position: 200% center; }
         }
-        .animate-float {
-          animation: float 5s ease-in-out infinite;
+        .premium-glow-card {
+          position: relative;
+          transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+          border: 2px solid rgba(255, 255, 255, 0.5);
         }
+        .premium-glow-card:hover {
+          transform: translateY(-12px) scale(1.02);
+          border-color: transparent;
+          box-shadow: 0 30px 60px -15px rgba(4, 0, 255, 0.4);
+        }
+        .premium-glow-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 3px;
+          background: linear-gradient(45deg, #0400FF, #4facfe, #0400FF);
+          background-size: 200% auto;
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity 0.5s;
+          animation: shine-border 3s linear infinite;
+        }
+        .premium-glow-card:hover::before { opacity: 1; }
       `}</style>
 
-      {/* NAVBAR */}
-      <nav className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] md:w-[90%] max-w-5xl rounded-full border ${scrolled ? 'bg-white/90 backdrop-blur-3xl py-2.5 px-4 md:py-3 md:px-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] border-gray-200' : 'bg-[#0a0a0a]/80 backdrop-blur-md py-3 px-4 md:py-4 md:px-6 border-white/10 shadow-2xl shadow-black/50'}`}>
+      {/* NAVBAR (BLINDADA) */}
+      <nav className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] md:w-[90%] max-w-5xl rounded-full border border-gray-200/50 bg-white/70 backdrop-blur-xl py-3 px-4 md:py-4 md:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]`}>
         <div className="flex justify-between items-center">
-          
           <div onClick={scrollToTop} className="flex items-center gap-2 md:gap-3 cursor-pointer group">
-            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-lg md:text-xl italic tracking-tighter transition-all group-hover:scale-110 shadow-[0_0_15px_rgba(4,0,255,0.5)] bg-[#0400FF] text-white`}>D</div>
-            <span className={`font-black text-xl md:text-2xl tracking-tighter uppercase hidden sm:block transition-colors duration-300 ${scrolled ? 'text-black' : 'text-white'}`}>DOTWEB</span>
+            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-lg md:text-xl italic bg-[#0400FF] text-white shadow-[0_0_15px_rgba(4,0,255,0.4)]`}>D</div>
+            <span className={`font-black text-xl md:text-2xl tracking-tighter uppercase hidden sm:block text-black`}>DOTWEB</span>
           </div>
-          
-          <div className={`hidden md:flex gap-8 font-black text-xs uppercase tracking-[0.15em] transition-colors duration-300 ${scrolled ? 'text-gray-600' : 'text-gray-400'}`}>
-            <a href="#sistema" className={`transition-colors ${scrolled ? 'hover:text-[#0400FF]' : 'hover:text-white'}`}>Sistema</a>
-            <a href="#precos" className={`transition-colors ${scrolled ? 'hover:text-[#0400FF]' : 'hover:text-white'}`}>Planos</a>
+          <div className={`hidden md:flex gap-8 font-black text-xs uppercase tracking-[0.15em] text-gray-600`}>
+            <a href="#sistema" className={`hover:text-[#0400FF] transition-colors`}>Sistema</a>
+            <a href="#precos" className={`hover:text-[#0400FF] transition-colors`}>Planos</a>
           </div>
-
-          <button onClick={() => window.open(linkWhatsTeste, '_blank')} className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 ${scrolled ? 'bg-black text-white hover:bg-[#0400FF] shadow-lg' : 'bg-white text-black hover:bg-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]'}`}>
+          <button onClick={() => window.open(linkWhatsTeste, '_blank')} className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full font-black text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 active:scale-95 bg-black text-white hover:bg-[#0400FF] shadow-lg`}>
             Testar Grátis
           </button>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      <section className="relative pt-32 md:pt-48 pb-16 md:pb-20 px-4 md:px-6 max-w-7xl mx-auto flex flex-col items-center text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-[#0400FF] blur-[100px] md:blur-[150px] opacity-30 rounded-full pointer-events-none"></div>
-
-        <div className="inline-flex items-center gap-2 bg-[#0400FF] border border-[#0400FF]/50 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-6 md:mb-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000 shadow-[0_0_20px_rgba(4,0,255,0.4)]">
+      {/* HERO SECTION COMPLETA (BLINDADA) */}
+      <section className="relative pt-32 md:pt-40 px-4 md:px-6 max-w-7xl mx-auto flex flex-col items-center text-center overflow-visible">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[300px] h-[300px] md:w-[600px] md:h-[600px] bg-[#0400FF] blur-[150px] opacity-10 rounded-full pointer-events-none"></div>
+        <div className="inline-flex items-center gap-2 bg-[#0400FF] border border-[#0400FF]/50 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] mb-6 md:mb-8 relative z-10 shadow-[0_0_20px_rgba(4,0,255,0.3)]">
           <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white animate-pulse"></span>
           GESTÃO DE EQUIPE ÁGIL
         </div>
-
-        <h1 className="text-[45px] sm:text-[60px] md:text-[120px] lg:text-[140px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-[-0.04em] relative z-10">
-          O PONTO <br />
-          <span className="text-[#0400FF]">SEM CAÔ.</span>
+        <h1 className="text-[45px] sm:text-[60px] md:text-[120px] lg:text-[140px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-[-0.04em] relative z-10 text-black">
+          O PONTO <br /> <span className="text-[#0400FF]">SEM CAÔ.</span>
         </h1>
-
-        <p className="mt-6 md:mt-10 text-base md:text-xl text-gray-400 font-medium max-w-2xl mx-auto relative z-10">
+        <p className="mt-6 md:mt-10 text-base md:text-xl text-gray-600 font-medium max-w-2xl mx-auto relative z-10">
           Geolocalização cirúrgica. App direto no celular. Esqueça o papel, a planilha e os relógios caros. Controle sua equipe de onde estiver, feito para quem não tem tempo a perder.
         </p>
-
-        {/* BOTAO ATUALIZADO AQUI - ANCORA PARA A SEÇÃO #SISTEMA */}
-        <div className="mt-10 md:mt-12 flex flex-col sm:flex-row items-center gap-4 relative z-10 w-full sm:w-auto">
-          <a href="#sistema" className="w-full sm:w-auto bg-[#0400FF] text-white px-8 py-5 md:px-10 md:py-6 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.1em] hover:bg-blue-700 transition-all flex items-center justify-center gap-3 active:scale-95">
+        <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 relative z-30 w-full sm:w-auto">
+          <a href="#sistema" className="w-full sm:w-auto bg-[#0400FF] text-white px-8 py-5 md:px-10 md:py-6 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.1em] hover:bg-blue-700 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-[0_10px_30px_rgba(4,0,255,0.3)]">
             Veja as Vantagens e Recursos <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
           </a>
         </div>
-
-        <div className="mt-16 md:mt-20 relative z-10 w-full max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-10 duration-1000">
-          
-          <div className="hidden md:flex absolute -left-16 top-1/4 z-20 bg-white/5 backdrop-blur-2xl border border-white/10 p-5 rounded-[30px] shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] animate-float items-center gap-4 w-64 group hover:bg-[#0400FF]/5 transition-colors duration-500">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity rounded-[30px]"></div>
-            <div className="w-12 h-12 bg-[#0400FF]/20 rounded-full flex items-center justify-center border border-[#0400FF]/50 relative z-10">
-               <Fingerprint className="w-6 h-6 text-[#0400FF]" weight="duotone" />
-            </div>
-            <div className="text-left relative z-10">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ponto Registrado</p>
-              <p className="text-sm text-white font-black">08:00 AM • Na Empresa</p>
+        <div className="w-full flex justify-center relative z-10 -mt-24 md:-mt-48 pointer-events-none perspective-container max-w-5xl mx-auto">
+          <div className="animate-phone-up w-full relative flex justify-center">
+            <div className="animate-float w-full relative flex justify-center">
+              <div 
+                className="will-change-transform"
+                style={{ 
+                  transform: `rotateX(${(1 - scrollProgress) * 35}deg) rotateY(${(1 - scrollProgress) * -12}deg) rotateZ(${(1 - scrollProgress) * -5}deg)`,
+                  transition: 'transform 0.1s ease-out'
+                }}
+              >
+                <img 
+                  src={mkDotInterface} 
+                  alt="Interface DOTWEB" 
+                  className="w-[320px] md:w-[550px] lg:w-[700px] h-auto object-contain relative z-10"
+                  style={{ filter: `drop-shadow(0 ${20 + (1 - scrollProgress)*10}px ${40 + (1 - scrollProgress)*20}px rgba(0,0,0,0.15))` }}
+                />
+              </div>
+              <div 
+                className="absolute inset-0 z-20 hidden md:block"
+                style={{
+                  opacity: scrollProgress > 0.6 ? 1 : 0,
+                  transform: `translateY(${scrollProgress > 0.6 ? 0 : '20px'})`,
+                  transition: 'all 0.6s ease-out'
+                }}
+              >
+                <div onClick={() => toggleFeature(1)} className="absolute top-[28%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Perfil Editável</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 1 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 1 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">O funcionário pode editar endereço, CPF, chave pix e +.</p>
+                  </div>
+                </div>
+                <div onClick={() => toggleFeature(2)} className="absolute top-[24%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Notificações</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 2 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 2 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Avisos urgentes com confirmação de leitura instantânea.</p>
+                  </div>
+                </div>
+                <div onClick={() => toggleFeature(3)} className="absolute top-[48%] left-[-2%] lg:left-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Status Atual</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 3 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 3 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Acompanhe se a equipe está trabalhando ou em intervalo.</p>
+                  </div>
+                </div>
+                <div onClick={() => toggleFeature(4)} className="absolute top-[46%] right-[-2%] lg:right-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Carga Diária</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 4 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 4 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Total trabalhado no dia atualizado em tempo real.</p>
+                  </div>
+                </div>
+                <div onClick={() => toggleFeature(5)} className="absolute top-[68%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Mural de Avisos</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 5 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 5 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Mural para o RH enviar recados importantes para todos.</p>
+                  </div>
+                </div>
+                <div onClick={() => toggleFeature(6)} className="absolute top-[66%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Equipe Online</span>
+                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 6 ? 'rotate-90' : ''}`} weight="bold" />
+                  </div>
+                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 6 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Visão rápida de quem da equipe está com o ponto rodando.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          <img src="https://images.unsplash.com/photo-1616077168079-7e09a6a21ba6?auto=format&fit=crop&q=80&w=1000" alt="Mockup DOTWEB" className="w-full h-auto rounded-[30px] md:rounded-[60px] border-4 md:border-8 border-[#1a1a1a] shadow-2xl object-cover hover:grayscale-0 transition-all duration-700 hover:scale-105" />
+        </div>
+        <div className="relative z-20 text-center -mt-32 md:-mt-56 pb-16 md:pb-24 w-full pointer-events-none" style={{ opacity: scrollProgress > 0.6 ? 1 : 0, transform: `translateY(${scrollProgress > 0.6 ? 0 : '40px'})`, transition: 'all 0.6s ease-out' }}>
+          <h2 className="text-[55px] sm:text-[80px] md:text-[130px] font-black uppercase text-black leading-[0.8] tracking-tighter drop-shadow-lg">ZERO FRAUDE.</h2>
+          <p className="mt-4 md:mt-8 text-lg md:text-2xl text-gray-700 font-semibold max-w-2xl mx-auto px-4">O ponto só bate se o GPS confirmar. Segurança total para o seu caixa.</p>
         </div>
       </section>
 
-      {/* LETREIRO INFINITO */}
-      <div className="bg-[#0400FF] text-white py-4 md:py-6 overflow-hidden flex whitespace-nowrap relative transform -rotate-2 scale-105 border-y-2 md:border-y-4 border-black">
-        <div className="animate-marquee font-black text-2xl md:text-5xl uppercase tracking-tighter flex items-center gap-6 md:gap-8">
-          <span>⚡ CORTA ESSA DE BATER PONTO NO PAPEL</span> <span className="outline-text">•</span>
-          <span>SISTEMA 100% CLOUD</span> <span className="outline-text">•</span>
-          <span>GEOLOCALIZAÇÃO EXATA</span> <span className="outline-text">•</span>
-          <span>⚡ CORTA ESSA DE BATER PONTO NO PAPEL</span> <span className="outline-text">•</span>
-          <span>SISTEMA 100% CLOUD</span> <span className="outline-text">•</span>
-          <span>GEOLOCALIZAÇÃO EXATA</span> <span className="outline-text">•</span>
-        </div>
-      </div>
-
-      {/* BENTO GRID */}
-      <section id="sistema" className="py-20 md:py-32 px-4 md:px-6 max-w-7xl mx-auto">
-        <div className="mb-12 md:mb-16 text-center md:text-left">
-          <h2 className="text-[40px] sm:text-[50px] md:text-[80px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-tighter mb-4 md:mb-6">
-            O CONTROLE NA <br/> <span className="text-gray-600">SUA MÃO.</span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(280px,auto)] md:auto-rows-[320px]">
-          
-          <div className="md:col-span-2 bg-[#111] rounded-[30px] md:rounded-[40px] p-8 md:p-14 relative overflow-hidden group border border-white/5 hover:border-[#0400FF]/50 transition-colors hover:bg-[#0400FF]/5 flex flex-col justify-end">
-            <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block relative z-10">01</span>
-            <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-3 md:mb-4 relative z-10 text-white mt-8 md:mt-0">Radar GPS</h3>
-            <p className="text-gray-400 font-medium text-base md:text-lg max-w-md relative z-10">O ponto só bate se o colaborador estiver no raio do local de trabalho. Sem desculpas e sem fraudes no final do mês.</p>
+      {/* BENTO GRID (BLINDADO) */}
+      <section id="sistema" className="py-24 md:py-32 px-4 md:px-6 bg-black relative z-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12 md:mb-16 text-center md:text-left">
+            <h2 className="text-[40px] sm:text-[50px] md:text-[80px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-tighter mb-4 md:mb-6 text-white">
+              O CONTROLE NA <br/> <span className="text-gray-600">SUA MÃO.</span>
+            </h2>
           </div>
 
-          <div className="bg-white text-black rounded-[30px] md:rounded-[40px] p-8 md:p-10 relative overflow-hidden hover:scale-105 transition-transform duration-500 hover:border-black/20 hover:border flex flex-col justify-end">
-            <span className="text-black font-black text-xl md:text-2xl tracking-tighter mb-auto block relative z-10">02</span>
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-3 md:mb-4 relative z-10 mt-8 md:mt-0">No Bolso</h3>
-            <p className="text-gray-600 font-medium text-base md:text-lg relative z-10 leading-snug">O funcionário bate o ponto direto pelo navegador do celular.</p>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(280px,auto)] md:auto-rows-[320px]">
+            <div className="md:col-span-2 anime-shine-card rounded-[30px] md:rounded-[40px] p-8 md:p-14 relative group flex flex-col justify-end">
+              <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block">01</span>
+              <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-3 md:mb-4 text-white mt-8 md:mt-0">Radar GPS</h3>
+              <p className="text-gray-300 font-medium text-base md:text-lg max-w-md relative z-10">O ponto só bate se o colaborador estiver no raio do local de trabalho. Sem desculpas e sem fraudes no final do mês.</p>
+            </div>
 
-          <div className="bg-[#1a1a1a] text-white rounded-[30px] md:rounded-[40px] p-8 md:p-10 relative overflow-hidden group border border-white/10 hover:border-[#0400FF] transition-colors hover:shadow-[0_8px_32px_0_rgba(4,0,255,0.1)] hover:bg-[#1f1f1f] flex flex-col justify-end">
-            <div className="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-[#0400FF]/30 rounded-full blur-3xl opacity-70 group-hover:opacity-100 transition-opacity"></div>
-            <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block relative z-10">03</span>
-            <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-3 md:mb-4 relative z-10 mt-8 md:mt-0">Ao Vivo</h3>
-            <p className="text-gray-300 font-medium text-base md:text-lg relative z-10 leading-snug">Abra o painel e veja na hora quem chegou e quem atrasou.</p>
-          </div>
+            <div className="anime-shine-card rounded-[30px] md:rounded-[40px] p-8 md:p-10 relative group flex flex-col justify-end">
+              <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block">02</span>
+              <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-3 md:mb-4 mt-8 md:mt-0 text-white">No Bolso</h3>
+              <p className="text-gray-300 font-medium text-base md:text-lg relative z-10 leading-snug">O funcionário bate o ponto direto pelo navegador do celular.</p>
+            </div>
 
-          <div className="md:col-span-2 bg-[#111] rounded-[30px] md:rounded-[40px] p-8 md:p-14 relative overflow-hidden group border border-white/5 hover:bg-[#0400FF]/5 transition-colors duration-500 flex flex-col justify-end">
-            <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block relative z-10">04</span>
-            <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-3 md:mb-4 relative z-10 text-white mt-8 md:mt-0">Blindagem Jurídica</h3>
-            <p className="text-gray-400 font-medium text-base md:text-lg max-w-xl relative z-10">Dados salvos na nuvem com criptografia pesada. Os relatórios que vão salvar o seu caixa em possíveis causas trabalhistas.</p>
-          </div>
+            <div className="anime-shine-card rounded-[30px] md:rounded-[40px] p-8 md:p-10 relative group flex flex-col justify-end">
+              <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block">03</span>
+              <h3 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-3 md:mb-4 mt-8 md:mt-0 text-white">Ao Vivo</h3>
+              <p className="text-gray-300 font-medium text-base md:text-lg relative z-10 leading-snug">Abra o painel e veja na hora quem chegou e quem atrasou.</p>
+            </div>
 
+            <div className="md:col-span-2 anime-shine-card rounded-[30px] md:rounded-[40px] p-8 md:p-14 relative group flex flex-col justify-end">
+              <span className="text-white font-black text-xl md:text-2xl tracking-tighter mb-auto block">04</span>
+              <h3 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-3 md:mb-4 text-white mt-8 md:mt-0">Blindagem Jurídica</h3>
+              <p className="text-gray-300 font-medium text-base md:text-lg max-w-xl relative z-10">Dados salvos na nuvem com criptografia pesada. Os relatórios que vão salvar o seu caixa em possíveis causas trabalhistas.</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* SEÇÃO DE PREÇOS */}
-      <section id="precos" className="py-20 md:py-32 px-4 md:px-6 bg-white text-black relative rounded-t-[40px] md:rounded-t-[80px] -mt-5 md:-mt-10">
+      <section id="precos" className="py-20 md:py-32 px-4 md:px-6 bg-white text-black relative rounded-t-[40px] md:rounded-t-[80px] -mt-5 md:-mt-10 z-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12 md:mb-20">
-            <h2 className="text-[40px] sm:text-[50px] md:text-[80px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-tighter mb-4 md:mb-6">
+            <h2 className="text-[40px] sm:text-[50px] md:text-[80px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-tighter mb-4 md:mb-6 text-black">
               JUSTO PARA <br/> O SEU CAIXA.
             </h2>
             <p className="text-lg md:text-xl text-gray-500 font-medium max-w-xl mx-auto">Sem taxas escondidas. Assine o pacote base e escale pagando centavos apenas por quem entra a mais.</p>
@@ -186,140 +295,166 @@ export default function App() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-6 items-stretch">
             
-            <div className="bg-[#F8F9FA] rounded-[30px] md:rounded-[40px] p-8 md:p-10 border-4 border-transparent hover:border-black transition-all flex flex-col group">
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1 md:mb-2">Starter</h3>
-              <p className="text-xs md:text-sm text-gray-500 font-bold uppercase tracking-widest mb-8 md:mb-10">Ideal p/ Pequenos Negócios</p>
+            {/* PLANO START (Sem desconto anual) */}
+            <div className="flow-hover-card bg-[#F8F9FA] rounded-[30px] md:rounded-[40px] p-8 md:p-10 border border-gray-100 flex flex-col group shadow-lg">
+              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Start</h3>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8">Pequenos Negócios</p>
               
-              <div className="mb-8 md:mb-10">
-                <span className="text-base md:text-lg font-black text-gray-400">R$</span>
-                <span className="text-6xl md:text-7xl font-black tracking-tighter">12</span>
-                <span className="text-2xl md:text-3xl font-black">,90</span>
-                <span className="block text-[10px] md:text-xs uppercase font-bold text-gray-400 mt-2 tracking-widest">por colaborador / mês</span>
+              <div className="mb-6">
+                <span className="text-base font-black text-gray-400">R$</span>
+                <span className="text-6xl md:text-7xl font-black text-black tracking-tighter">12</span>
+                <span className="text-2xl font-black text-black">,90</span>
+                <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 mt-2 tracking-widest">por funcionário / mês</p>
               </div>
               
-              <div className="bg-white p-5 rounded-2xl md:rounded-3xl mb-auto border border-gray-200 shadow-sm">
-                <p className="text-xs md:text-sm font-bold flex justify-between">Base (até 10 func): <span className="font-black">R$ 129/mês</span></p>
-                <div className="w-full h-px bg-gray-100 my-3"></div>
-                <p className="text-[10px] md:text-xs font-bold text-gray-500 flex justify-between">Colaborador extra: <span className="font-bold">+R$ 10,00</span></p>
+              <div className="bg-white p-5 rounded-2xl md:rounded-3xl mb-auto border border-gray-200 shadow-sm flex flex-col gap-2">
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-black">Total Mensal (até 10 func): <span className="font-black text-[#0400FF]">R$ 129,00</span></p>
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-gray-500">Plano Anual: <span className="font-black text-black">R$ 1.548,00</span></p>
+                 <div className="w-full h-px bg-gray-100 my-2"></div>
+                 <p className="text-[10px] md:text-xs font-bold text-gray-400 flex justify-between">Colaborador extra: <span className="font-bold text-gray-700">+R$ 10,00/mês</span></p>
               </div>
 
-              <button onClick={() => window.open('https://wa.me/5514996392691?text=olá,%20quero%20assinar%20o%20plano%20Starter%20da%20dotweb!%20🚀', '_blank')} className="w-full mt-8 py-4 md:py-5 border-4 border-black rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all group-hover:scale-105 active:scale-95">Assinar Starter</button>
+              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-8 py-4 md:py-5 border-2 border-black rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Start</button>
             </div>
 
-            <div className="bg-[#0400FF] text-white rounded-[30px] md:rounded-[40px] p-8 md:p-10 transform lg:-translate-y-8 shadow-2xl shadow-blue-500/30 flex flex-col relative group">
-              
+            {/* PLANO SYNC */}
+            <div className="bg-[#0400FF] text-white rounded-[30px] md:rounded-[40px] p-8 md:p-10 transform lg:-translate-y-8 shadow-2xl shadow-blue-500/30 flex flex-col relative group transition-transform hover:-translate-y-10 duration-300">
               <div className="absolute top-5 right-5 md:top-6 md:right-6 bg-white/20 backdrop-blur-md border border-white/20 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
                 O MAIS QUERIDO
               </div>
               
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1 md:mb-2 mt-4 text-white">Growth</h3>
-              <p className="text-xs md:text-sm text-blue-200 font-bold uppercase tracking-widest mb-8 md:mb-10">Negócios em Expansão</p>
+              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1 mt-4 text-white">Sync</h3>
+              <p className="text-xs text-blue-200 font-bold uppercase tracking-widest mb-8">Negócios em Expansão</p>
               
-              <div className="mb-8 md:mb-10">
-                <span className="text-base md:text-lg font-black text-blue-300">R$</span>
-                <span className="text-7xl md:text-8xl font-black tracking-tighter text-white">9</span>
-                <span className="text-2xl md:text-3xl font-black text-white">,45</span>
-                <span className="block text-[10px] md:text-xs uppercase font-bold text-blue-300 mt-2 tracking-widest">por colaborador / mês</span>
+              <div className="mb-6">
+                <span className="text-base font-black text-blue-300">R$</span>
+                <span className="text-7xl md:text-8xl font-black text-white tracking-tighter">9</span>
+                <span className="text-2xl font-black text-white">,45</span>
+                <p className="text-[10px] md:text-xs uppercase font-bold text-blue-300 mt-2 tracking-widest">por funcionário / mês</p>
               </div>
               
-              <div className="bg-black/20 p-5 rounded-2xl md:rounded-3xl mb-6 md:mb-8 backdrop-blur-md border border-white/10">
-                <p className="text-xs md:text-sm font-bold flex justify-between text-white">Base (até 20 func): <span className="font-black">R$ 189/mês</span></p>
-                <div className="w-full h-px bg-white/10 my-3"></div>
-                <p className="text-[10px] md:text-xs font-bold text-blue-200 flex justify-between">Colaborador extra: <span className="font-bold">+R$ 7,00</span></p>
+              <div className="bg-black/20 p-5 rounded-2xl md:rounded-3xl mb-6 md:mb-8 backdrop-blur-md border border-white/10 flex flex-col gap-2">
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-white">Total Mensal (até 20 func): <span className="font-black">R$ 189,00</span></p>
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-blue-200">Plano Anual (2 meses off): <span className="font-black text-white">R$ 1.890,00</span></p>
+                 <div className="w-full h-px bg-white/10 my-2"></div>
+                 <p className="text-[10px] md:text-xs font-bold text-blue-300 flex justify-between">Colaborador extra: <span className="font-bold text-blue-100">+R$ 7,00/mês</span></p>
               </div>
 
               <ul className="text-left space-y-3 md:space-y-4 mb-auto text-xs md:text-sm font-bold text-blue-100">
-                <li className="flex items-start md:items-center gap-3"><CheckCircle className="w-5 h-5 text-white shrink-0" weight="bold" /> Todas as funções Starter</li>
+                <li className="flex items-start md:items-center gap-3"><CheckCircle className="w-5 h-5 text-white shrink-0" weight="bold" /> Todas as funções Start</li>
                 <li className="flex items-start md:items-center gap-3"><CheckCircle className="w-5 h-5 text-white shrink-0" weight="bold" /> Espelho de Ponto em 1 Clique</li>
               </ul>
 
-              <button onClick={() => window.open('https://wa.me/5514996392691?text=olá,%20quero%20assinar%20o%20plano%20Growth%20da%20dotweb!%20🚀', '_blank')} className="w-full mt-8 py-4 md:py-5 bg-white text-black rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform group-hover:rotate-1">Assinar Growth</button>
+              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-8 py-4 md:py-5 bg-white text-[#0400FF] rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-xl">Assinar Sync</button>
             </div>
 
-            <div className="bg-[#F8F9FA] rounded-[30px] md:rounded-[40px] p-8 md:p-10 border-4 border-transparent hover:border-black transition-all flex flex-col group">
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1 md:mb-2">Enterprise</h3>
-              <p className="text-xs md:text-sm text-gray-500 font-bold uppercase tracking-widest mb-8 md:mb-10">Para Operações Maiores</p>
+            {/* PLANO FLOW */}
+            <div className="flow-hover-card bg-[#F8F9FA] rounded-[30px] md:rounded-[40px] p-8 md:p-10 border border-transparent flex flex-col group shadow-lg">
+              <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Flow</h3>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-8">Operações Maiores</p>
               
-              <div className="mb-8 md:mb-10">
-                <span className="text-base md:text-lg font-black text-gray-400">R$</span>
-                <span className="text-6xl md:text-7xl font-black tracking-tighter">6</span>
-                <span className="text-2xl md:text-3xl font-black">,78</span>
-                <span className="block text-[10px] md:text-xs uppercase font-bold text-gray-400 mt-2 tracking-widest">por colaborador / mês</span>
+              <div className="mb-6">
+                <span className="text-base font-black text-gray-400">R$</span>
+                <span className="text-6xl md:text-7xl font-black text-black tracking-tighter">7</span>
+                <span className="text-2xl font-black text-black">,30</span>
+                <p className="text-[10px] md:text-xs uppercase font-bold text-gray-400 mt-2 tracking-widest">por funcionário / mês</p>
               </div>
               
-              <div className="bg-white p-5 rounded-2xl md:rounded-3xl mb-auto border border-gray-200 shadow-sm">
-                <p className="text-xs md:text-sm font-bold flex justify-between">Base (até 50 func): <span className="font-black">R$ 339/mês</span></p>
-                <div className="w-full h-px bg-gray-100 my-3"></div>
-                <p className="text-[10px] md:text-xs font-bold text-gray-500 flex justify-between">Colaborador extra: <span className="font-bold">+R$ 4,00</span></p>
+              <div className="bg-white p-5 rounded-2xl md:rounded-3xl mb-auto border border-gray-200 shadow-sm flex flex-col gap-2">
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-black">Total Mensal (até 30 func): <span className="font-black text-[#0400FF]">R$ 219,00</span></p>
+                 <p className="text-xs md:text-sm font-bold flex justify-between text-gray-500">Plano Anual (2 meses off): <span className="font-black text-black">R$ 2.190,00</span></p>
+                 <div className="w-full h-px bg-gray-100 my-2"></div>
+                 <p className="text-[10px] md:text-xs font-bold text-gray-400 flex justify-between">Colaborador extra: <span className="font-bold text-gray-700">+R$ 4,00/mês</span></p>
               </div>
 
-              <button onClick={() => window.open('https://wa.me/5514996392691?text=olá,%20gostaria%20de%20falar%20com%20um%20consultor%20sobre%20o%20plano%20Enterprise%20da%20dotweb!%20💼', '_blank')} className="w-full mt-8 py-4 md:py-5 border-4 border-black rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all group-hover:scale-105">Falar com Comercial</button>
+              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-8 py-4 md:py-5 border-2 border-black rounded-full font-black text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Flow</button>
             </div>
 
           </div>
           
-          <div className="mt-10 md:mt-12 text-center bg-blue-50 border-2 border-dashed border-[#0400FF] p-5 md:p-6 rounded-2xl md:rounded-3xl max-w-3xl mx-auto group hover:bg-[#0400FF] transition-colors duration-500 overflow-hidden">
-             <p className="text-xs md:text-sm font-black text-[#0400FF] flex items-center justify-center gap-2 md:gap-3 group-hover:text-white transition-colors duration-500">
-              <Lightning className="w-4 h-4 md:w-5 md:h-5 animate-pulse" weight="bold" /> Assine o Anual e leve 2 meses de graça.
+          {/* BANNER AVISO (ATUALIZADO) */}
+          <div className="mt-10 md:mt-12 text-center bg-[#0400FF]/5 border-2 border-dashed border-[#0400FF]/30 p-6 rounded-3xl max-w-3xl mx-auto group hover:bg-[#0400FF] transition-colors duration-500">
+             <p className="text-xs md:text-sm font-black text-[#0400FF] flex items-center justify-center gap-3 group-hover:text-white transition-colors">
+              <Lightning className="w-5 h-5 animate-pulse" weight="bold" /> Assine o Anual no Sync ou Flow e leve 2 meses de graça.
             </p>
-             <p className="text-[10px] md:text-xs text-gray-500 mt-2 group-hover:text-blue-100 transition-colors duration-500">+50 funcionários? Chama a gente no zap para um desconto agressivo.</p>
+             <p className="text-[10px] md:text-xs text-gray-500 mt-2 group-hover:text-blue-100 transition-colors">Precisa de algo sob medida? Chama a gente no WhatsApp abaixo.</p>
+          </div>
+
+          {/* PLANO INFINITY - DESTAQUE PREMIUM */}
+          <div className="premium-glow-card mt-12 md:mt-16 bg-white/80 backdrop-blur-2xl border border-white/50 text-black p-8 md:p-12 rounded-[30px] md:rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0400FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+            
+            <div className="text-center md:text-left relative z-10">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#0400FF]/10 border border-[#0400FF]/20 text-[10px] font-black uppercase tracking-widest text-[#0400FF] mb-5">
+                <Crown weight="fill" className="w-4 h-4" /> Plano Customizado
+              </div>
+              <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-3">Infinity</h3>
+              <p className="text-gray-600 font-medium text-sm md:text-base max-w-2xl leading-relaxed">Sua empresa tem mais de 30 funcionários? Tenha servidores dedicados, implantação guiada pelo nosso time e valores ainda mais agressivos por funcionário.</p>
+            </div>
+            
+            <div className="relative z-10 w-full md:w-auto flex-shrink-0">
+               <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full md:w-auto px-10 py-5 rounded-full font-black text-xs md:text-sm uppercase tracking-widest bg-[#0400FF] text-white hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(4,0,255,0.3)]">
+                  Falar com Consultor
+               </button>
+            </div>
           </div>
 
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-black py-16 md:py-24 px-4 md:px-10 text-gray-500 border-t border-white/5 rounded-t-[40px] md:rounded-t-[80px] -mt-5 md:-mt-10 z-10 relative">
+      <footer className="bg-white py-16 md:py-24 px-4 md:px-10 text-gray-700 border-t border-gray-200 z-10 relative">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10 md:gap-12">
           
           <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col gap-4 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-3">
               <div className="w-10 h-10 rounded-full bg-[#0400FF] flex items-center justify-center text-white font-black text-xl italic tracking-tighter">D</div>
-              <h2 className="text-3xl font-black text-white uppercase tracking-tighter">DOTWEB</h2>
+              <h2 className="text-3xl font-black text-black uppercase tracking-tighter">DOTWEB</h2>
             </div>
-            <p className="text-xs text-gray-700 font-medium max-w-xs mx-auto sm:mx-0">Ponto digital e gestão de equipe sem complicação para quem faz o negócio girar.</p>
+            <p className="text-xs text-gray-500 font-medium max-w-xs mx-auto sm:mx-0">Ponto digital e gestão de equipe sem complicação para quem faz o negócio girar.</p>
           </div>
 
           <div className="text-center sm:text-left">
-            <h4 className="font-black text-white uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">Produto</h4>
-            <ul className="space-y-3 font-bold text-xs md:text-sm">
-              <li><a href="#sistema" className="hover:text-white hover:underline transition-all">Como Funciona</a></li>
-              <li><a href="#sistema" className="hover:text-white hover:underline transition-all">App Mobile</a></li>
+            <h4 className="font-black text-black uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">Produto</h4>
+            <ul className="space-y-3 font-bold text-xs md:text-sm text-gray-500">
+              <li><a href="#sistema" className="hover:text-[#0400FF] hover:underline transition-all">Como Funciona</a></li>
+              <li><a href="#sistema" className="hover:text-[#0400FF] hover:underline transition-all">App Mobile</a></li>
               <li><a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="hover:text-[#0400FF] hover:underline transition-all">Testar Sistema</a></li>
             </ul>
           </div>
 
           <div className="text-center sm:text-left">
-            <h4 className="font-black text-white uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">Planos</h4>
-            <ul className="space-y-3 font-bold text-xs md:text-sm">
-              <li><a href="#precos" className="hover:text-white hover:underline transition-all">Starter</a></li>
-              <li><a href="#precos" className="hover:text-white hover:underline transition-all">Growth</a></li>
-              <li><a href="#precos" className="hover:text-white hover:underline transition-all">Enterprise</a></li>
+            <h4 className="font-black text-black uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">Planos</h4>
+            <ul className="space-y-3 font-bold text-xs md:text-sm text-gray-500">
+              <li><a href="#precos" className="hover:text-[#0400FF] hover:underline transition-all">Start</a></li>
+              <li><a href="#precos" className="hover:text-[#0400FF] hover:underline transition-all">Sync</a></li>
+              <li><a href="#precos" className="hover:text-[#0400FF] hover:underline transition-all">Flow</a></li>
+              <li><a href="#precos" className="text-[#0400FF] hover:underline transition-all flex items-center justify-center sm:justify-start gap-1"><Crown weight="fill" className="w-4 h-4" /> Infinity</a></li>
             </ul>
           </div>
 
           <div className="text-center sm:text-left">
-            <h4 className="font-black text-white uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">A Empresa</h4>
-            <ul className="space-y-3 font-bold text-xs md:text-sm">
-              <li><a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="hover:text-white hover:underline transition-all">Fale com a gente</a></li>
-              <li><a href="/termos" className="hover:text-white hover:underline transition-all">Termos de Uso</a></li>
-              <li><a href="/privacidade" className="hover:text-white hover:underline transition-all">Privacidade</a></li>
+            <h4 className="font-black text-black uppercase tracking-widest text-[10px] md:text-xs mb-4 md:mb-6">A Empresa</h4>
+            <ul className="space-y-3 font-bold text-xs md:text-sm text-gray-500">
+              <li><a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="hover:text-[#0400FF] hover:underline transition-all">Fale com a gente</a></li>
+              <li><a href="/termos" className="hover:text-[#0400FF] hover:underline transition-all">Termos de Uso</a></li>
+              <li><a href="/privacidade" className="hover:text-[#0400FF] hover:underline transition-all">Privacidade</a></li>
             </ul>
           </div>
 
           <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col items-center sm:items-end gap-6 mt-4 md:mt-0">
-            <h4 className="font-black text-white uppercase tracking-widest text-[10px] md:text-xs hidden md:block">Atendimento</h4>
-            <a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-[#1a1a1a] border-2 border-white/5 hover:border-green-400 hover:text-green-400 p-3.5 md:p-4 rounded-full md:rounded-3xl group transition-all text-[10px] md:text-xs font-black uppercase tracking-widest">
-               <Lightning className="w-4 h-4 md:w-5 md:h-5 animate-pulse text-green-400" weight="duotone" />
-               Chamar no Zap
-               <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-400 opacity-50" />
+            <h4 className="font-black text-black uppercase tracking-widest text-[10px] md:text-xs hidden md:block">Atendimento</h4>
+            <a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-gray-50 border-2 border-gray-200 hover:border-green-400 hover:text-green-500 hover:bg-green-50 p-3.5 md:p-4 rounded-full md:rounded-3xl group transition-all text-[10px] md:text-xs font-black uppercase tracking-widest text-black">
+               <WhatsappLogo className="w-5 h-5 md:w-6 md:h-6 text-green-500 shrink-0" weight="duotone" />
+               WhatsApp
+               <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 opacity-50" />
             </a>
           </div>
 
         </div>
 
-        <div className="max-w-7xl mx-auto mt-12 md:mt-16 pt-6 md:pt-8 border-t border-white/5">
-           <p className="text-[9px] md:text-[10px] text-gray-800 font-bold uppercase tracking-widest flex flex-col sm:flex-row items-center sm:justify-between gap-3 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto mt-12 md:mt-16 pt-6 md:pt-8 border-t border-gray-200">
+           <p className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest flex flex-col sm:flex-row items-center sm:justify-between gap-3 text-center sm:text-left">
              <span>© 2026 DOTWEB POINT SOLUTIONS LTDA.</span>
              <span className="hidden sm:inline">Todos os direitos reservados.</span>
              <span>CNPJ 99.999.999/0001-99</span>
