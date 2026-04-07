@@ -5,8 +5,6 @@ export default function Termos({ voltarInicio }: { voltarInicio: () => void }) {
   const [faqAberto, setFaqAberto] = useState<number | null>(null);
   const [duvida, setDuvida] = useState("");
 
-  const linkWhatsTeste = "https://wa.me/5514996392691?text=Olá,%20eu%20quero%20testar%20a%20dotweb%20por%207%20dias!%20🕑";
-
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);

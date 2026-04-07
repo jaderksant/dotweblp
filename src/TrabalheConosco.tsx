@@ -147,7 +147,7 @@ export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => 
                 <li>• React & TypeScript</li>
                 <li>• Vite & Tailwind CSS</li>
                 <li>• Foco em interfaces limpas</li>
-                <li>• Clean Code</li>
+                <li>• Banco de Dados (SUPABASE) </li>
               </ul>
             </div>
           </div>
@@ -157,10 +157,10 @@ export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => 
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white mb-6">
               <PaintBrush size={24} weight="duotone" />
             </div>
-            <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-2 text-white">Designer Digital</h4>
+            <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-2 text-white">Designer</h4>
             <p className="text-xs font-bold text-[#0400FF] uppercase tracking-widest mb-4">Júnior / Pleno</p>
             <p className="text-gray-400 text-sm leading-relaxed font-medium mb-6">
-              Mente criativa com alto senso estético para alinhar nossa comunicação visual (Dark/Premium Vibe).
+              Mente criativa com alto senso estético para alinhar nossa comunicação visual.
             </p>
             <div className="mt-auto">
               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Requisitos:</p>
@@ -181,7 +181,7 @@ export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => 
             <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-2 text-white">Editor de Vídeo</h4>
             <p className="text-xs font-bold text-green-400 uppercase tracking-widest mb-4">Freelancer</p>
             <p className="text-gray-400 text-sm leading-relaxed font-medium mb-6">
-              Procuramos um editor dinâmico para dominar a retenção visual nos nossos criativos para TikTok/Reels.
+              Procuramos um editor dinâmico para dominar a retenção visual nos nossos criativos.
             </p>
             <div className="mt-auto">
               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2">Requisitos:</p>
@@ -225,7 +225,7 @@ export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => 
               >
                 <option value="" disabled></option>
                 <option value="Desenvolvedor Web">Desenvolvedor Web (Pleno/Sênior)</option>
-                <option value="Designer Digital">Designer Digital (Júnior/Pleno)</option>
+                <option value="Designer ">Designer Digital (Júnior/Pleno)</option>
                 <option value="Editor de Vídeo Freelancer">Editor de Vídeo Freelancer</option>
               </select>
             </div>
