@@ -5,7 +5,6 @@ import {
 } from '@phosphor-icons/react';
 import mkDotInterface from './assets/mk-dotinterface.png';
 
-// 1. ADICIONADO O COMANDO "irParaTrabalhe" NA LINHA ABAIXO
 export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irParaTrabalhe }: { irParaTeste: () => void, irParaPrivacidade: () => void, irParaTermos: () => void, irParaTrabalhe: () => void }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeFeature, setActiveFeature] = useState<number | null>(null);
@@ -282,7 +281,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         </div>
       </section>
 
-      {/* BENTO GRID */}
+      {/* BENTO GRID (SISTEMA DE FEATURES COMPLETO) */}
       <section id="sistema" className="py-16 sm:py-24 md:py-32 px-4 md:px-6 bg-black relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="mb-10 sm:mb-12 md:mb-16 text-center md:text-left">
@@ -291,31 +290,106 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(280px,auto)] md:auto-rows-[320px]">
-            <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-14 relative group flex flex-col justify-end">
-              <span className="text-white font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">01</span>
-              <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Radar GPS</h3>
-              <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-md relative z-10">O ponto só bate se o colaborador estiver no raio do local de trabalho. Sem desculpas e sem fraudes no final do mês.</p>
+          {/* DIVISÃO: GESTOR */}
+          <div className="mb-6 flex items-center gap-4">
+            <h3 className="text-xl md:text-2xl font-black text-[#0400FF] uppercase tracking-widest">Para o Gestor</h3>
+            <div className="h-px bg-white/10 flex-1"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(280px,auto)] md:auto-rows-[300px] mb-16">
+            {/* Card 1 - Span 2 */}
+            <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">01</span>
+               <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Cerca Virtual Antifraude</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Defina o local exato da batida. Bateu fora do raio ou em horário não autorizado? O sistema bloqueia na hora e te avisa. Zero surpresas.</p>
             </div>
 
+            {/* Card 2 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
-              <span className="text-white font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">02</span>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 mt-8 md:mt-0 text-white">No Bolso</h3>
-              <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">O funcionário bate o ponto direto pelo navegador do celular.</p>
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">02</span>
+               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">100% Offline</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">A internet caiu? O sistema guarda a hora no celular e sincroniza sozinho depois. Fim das desculpas.</p>
             </div>
 
+            {/* Card 3 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
-              <span className="text-white font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">03</span>
-              <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 mt-8 md:mt-0 text-white">Ao Vivo</h3>
-              <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Abra o painel e veja na hora quem chegou e quem atrasou.</p>
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">03</span>
+               <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Tempo Real</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Saiba na palma da mão quem chegou, quem está no intervalo e quem faltou hoje. Atualizado segundo a segundo.</p>
             </div>
 
-            <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-14 relative group flex flex-col justify-end">
-              <span className="text-white font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">04</span>
-              <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Blindagem Jurídica</h3>
-              <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Dados salvos na nuvem com criptografia pesada. Os relatórios que vão salvar o seu caixa em possíveis causas trabalhistas.</p>
+            {/* Card 4 - Span 2 */}
+            <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">04</span>
+               <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Fim da Matemática</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Esqueça horas perdidas somando planilhas e cadernos. O sistema calcula automaticamente o saldo de horas, atrasos e faltas da sua equipe.</p>
+            </div>
+
+            {/* Card 5 - Span 2 */}
+            <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">05</span>
+               <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Assinatura Digital</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Fechamento em 1 clique: envie o espelho direto para o app e receba a assinatura da equipe na mesma hora. Sem imprimir papel.</p>
+            </div>
+
+            {/* Card 6 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">06</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Atestados</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Foto do atestado via app para você aprovar. Adeus mensagens perdidas no WhatsApp.</p>
+            </div>
+
+            {/* Card 7 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">07</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Auditoria Invisível</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Ajustou o ponto? O sistema grava um rastro transparente, blindando sua empresa juridicamente.</p>
+            </div>
+
+            {/* Card 8 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">08</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Comunicados</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Envie avisos e saiba quem leu e a que horas leu. O fim do "eu não vi no grupo".</p>
+            </div>
+
+            {/* Card 9 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">09</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Info a 1 Clique</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Tenha dados de admissão e até a chave PIX dos funcionários centralizados para o pagamento.</p>
             </div>
           </div>
+
+          {/* DIVISÃO: COLABORADOR */}
+          <div className="mb-6 flex items-center gap-4">
+            <h3 className="text-xl md:text-2xl font-black text-[#0400FF] uppercase tracking-widest">Para a Equipe</h3>
+            <div className="h-px bg-white/10 flex-1"></div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(250px,auto)] md:auto-rows-[280px]">
+            {/* Card 10 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">10</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Direto ao Ponto</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base relative z-10 leading-snug">App super leve, não trava o celular e é fácil de usar. Bater o ponto leva literalmente 1 segundo.</p>
+            </div>
+
+            {/* Card 11 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">11</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Fim das Dúvidas</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base relative z-10 leading-snug">O próprio funcionário acompanha suas horas no celular, diminuindo perguntas no seu ouvido.</p>
+            </div>
+
+            {/* Card 12 - Span 1 */}
+            <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
+               <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">12</span>
+               <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Privacidade 100%</h3>
+               <p className="text-gray-300 font-medium text-sm sm:text-base relative z-10 leading-snug">O GPS só é ativado no momento exato em que o botão é apertado. Fora disso, privacidade total.</p>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -469,7 +543,6 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             <h4 className="font-black text-black uppercase tracking-widest text-[9px] sm:text-[10px] md:text-xs mb-3 sm:mb-4 md:mb-6">Produto</h4>
             <ul className="space-y-2 sm:space-y-3 font-bold text-[11px] sm:text-xs md:text-sm text-gray-500">
               <li><a href="#sistema" className="hover:text-[#0400FF] hover:underline transition-all">Como Funciona</a></li>
-              {/* O LINK DO APP MOBILE FOI REMOVIDO DAQUI */}
               <li><button onClick={irParaTeste} className="hover:text-[#0400FF] hover:underline transition-all text-left">Testar Sistema</button></li>
             </ul>
           </div>
@@ -488,7 +561,6 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             <h4 className="font-black text-black uppercase tracking-widest text-[9px] sm:text-[10px] md:text-xs mb-3 sm:mb-4 md:mb-6">A Empresa</h4>
             <ul className="space-y-2 sm:space-y-3 font-bold text-[11px] sm:text-xs md:text-sm text-gray-500">
               <li><a href={linkWhatsTeste} target="_blank" rel="noreferrer" className="hover:text-[#0400FF] hover:underline transition-all">Fale com a gente</a></li>
-              {/* O BOTÃO DO TRABALHE CONOSCO FOI ADICIONADO AQUI */}
               <li><button onClick={irParaTrabalhe} className="hover:text-[#0400FF] hover:underline transition-all text-left">Trabalhe Conosco</button></li>
               <li><button onClick={irParaTermos} className="hover:text-[#0400FF] hover:underline transition-all text-left">Termos de Uso</button></li>
               <li><button onClick={irParaPrivacidade} className="hover:text-[#0400FF] hover:underline transition-all text-left">Privacidade</button></li>
