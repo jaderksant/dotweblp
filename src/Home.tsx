@@ -1,52 +1,153 @@
 import { useEffect, useState } from 'react';
 import { 
   ArrowRight, Lightning, CheckCircle, WhatsappLogo, 
-  CaretRight, Crown, WifiSlash
+  CaretRight, Crown, WifiSlash, X, Spinner
 } from '@phosphor-icons/react';
 import mkDotInterface from './assets/mk-dotinterface.png';
+import { supabase } from './supabase'; // CONEXÃO COM O BANCO E FUNCTIONS!
 
 export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irParaTrabalhe }: { irParaTeste: () => void, irParaPrivacidade: () => void, irParaTermos: () => void, irParaTrabalhe: () => void }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeFeature, setActiveFeature] = useState<number | null>(null);
 
+  // ESTADOS DO CHECKOUT
+  const [modalCheckoutAberto, setModalCheckoutAberto] = useState(false);
+  const [planoSelecionado, setPlanoSelecionado] = useState<string>('');
+  const [cicloPagamento, setCicloPagamento] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [erroCheckout, setErroCheckout] = useState('');
+  
+  const [formCheckout, setFormCheckout] = useState({
+    nome: '',
+    email: '',
+    documento: '',
+    colaboradores: 10 // Padrão base
+  });
+
   const linkWhatsTeste = "https://wa.me/5514996392691?text=Olá,%20eu%20quero%20testar%20a%20dotweb%20por%207%20dias!%20🕑";
 
   useEffect(() => {
     let ticking = false;
-
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const progress = Math.min(1, currentScrollY / 400);
-          setScrollProgress(progress);
-          
+          setScrollProgress(Math.min(1, window.scrollY / 400));
           ticking = false;
         });
         ticking = true;
       }
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const toggleFeature = (id: number) => setActiveFeature(activeFeature === id ? null : id);
+
+  // FUNÇÃO PARA ABRIR O MODAL DE PAGAMENTO
+  const abrirCheckout = (plano: string, minColab: number) => {
+    setPlanoSelecionado(plano);
+    setFormCheckout(prev => ({ ...prev, colaboradores: minColab }));
+    setCicloPagamento('MONTHLY');
+    setErroCheckout('');
+    setModalCheckoutAberto(true);
   };
 
-  const toggleFeature = (id: number) => {
-    setActiveFeature(activeFeature === id ? null : id);
+  // FUNÇÃO QUE CHAMA O SUPABASE E O ASAAS
+  const handleGerarPagamento = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingCheckout(true);
+    setErroCheckout('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('asaas-checkout', {
+        body: { 
+          name: formCheckout.nome, 
+          email: formCheckout.email, 
+          cpfCnpj: formCheckout.documento.replace(/\D/g, ''), // Limpa máscara
+          planKey: planoSelecionado, 
+          employeesCount: formCheckout.colaboradores,
+          cycle: cicloPagamento
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Redireciona para o link do Asaas!
+      if (data?.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error("Link de pagamento não retornado.");
+      }
+
+    } catch (err: any) {
+      console.error(err);
+      setErroCheckout(err.message || 'Ocorreu um erro ao gerar o pagamento. Tente novamente.');
+      setLoadingCheckout(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white text-black font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white">
+    <div className="min-h-screen bg-white text-black font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white relative">
       
+      {/* MODAL DE CHECKOUT (SOBREPÕE A TELA) */}
+      {modalCheckoutAberto && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-[30px] p-8 relative shadow-2xl animate-phone-up">
+            <button onClick={() => setModalCheckoutAberto(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors">
+              <X size={24} weight="bold" />
+            </button>
+            
+            <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Finalizar Assinatura</h3>
+            <p className="text-xs font-bold text-[#0400FF] uppercase tracking-widest mb-6">Plano {planoSelecionado}</p>
+
+            <form onSubmit={handleGerarPagamento} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nome Completo / Razão Social</label>
+                <input required type="text" value={formCheckout.nome} onChange={e => setFormCheckout({...formCheckout, nome: e.target.value})} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">CPF ou CNPJ</label>
+                  <input required type="text" placeholder="Apenas números" value={formCheckout.documento} onChange={e => setFormCheckout({...formCheckout, documento: e.target.value})} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Colaboradores</label>
+                  <input required type="number" min={planoSelecionado === 'start' ? 1 : planoSelecionado === 'sync' ? 20 : 30} value={formCheckout.colaboradores} onChange={e => setFormCheckout({...formCheckout, colaboradores: Number(e.target.value)})} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">E-mail Comercial</label>
+                <input required type="email" value={formCheckout.email} onChange={e => setFormCheckout({...formCheckout, email: e.target.value})} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+              </div>
+
+              <div className="pt-2">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Ciclo de Pagamento</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => setCicloPagamento('MONTHLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all ${cicloPagamento === 'MONTHLY' ? 'border-[#0400FF] bg-[#0400FF]/5 text-[#0400FF]' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>Mensal</button>
+                  <button type="button" onClick={() => setCicloPagamento('YEARLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all relative ${cicloPagamento === 'YEARLY' ? 'border-green-500 bg-green-50 text-green-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>
+                    Anual (PIX)
+                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full animate-pulse">2 MESES OFF</span>
+                  </button>
+                </div>
+              </div>
+
+              {erroCheckout && <p className="text-[11px] font-bold text-red-500 text-center mt-2">{erroCheckout}</p>}
+
+              <button type="submit" disabled={loadingCheckout} className="w-full mt-4 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2">
+                {loadingCheckout ? <Spinner size={18} className="animate-spin" /> : 'Ir para Pagamento Segurto'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ESTILOS (Mesmos de antes) */}
       <style>{`
         html { scroll-behavior: smooth; }
-        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-100%); } }
-        .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 15s linear infinite; }
-        .outline-text { color: transparent; -webkit-text-stroke: 1px rgba(0,0,0,0.2); }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         .animate-float { animation: float 6s ease-in-out infinite; }
         @keyframes phone-up { 0% { transform: translateY(100px); opacity: 0; } 100% { transform: translateY(0px); opacity: 1; } }
@@ -82,18 +183,14 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
           transform: translateY(-5px) translateZ(0);
         }
 
-        .flow-hover-card {
-          transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
+        .flow-hover-card { transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
         .flow-hover-card:hover {
           transform: translateY(-8px);
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
           border-color: rgba(0, 0, 0, 0.05);
         }
 
-        @keyframes shine-border {
-          to { background-position: 200% center; }
-        }
+        @keyframes shine-border { to { background-position: 200% center; } }
         .premium-glow-card {
           position: relative;
           transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -167,110 +264,26 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         <div className="w-full flex justify-center relative z-10 -mt-16 sm:-mt-24 md:-mt-48 pointer-events-none perspective-container max-w-5xl mx-auto">
           <div className="animate-phone-up w-full relative flex justify-center">
             <div className="animate-float w-full relative flex justify-center flex-col items-center">
-              
-              <div 
-                className="will-change-transform"
-                style={{ 
-                  transform: `rotateX(${(1 - scrollProgress) * 35}deg) rotateY(${(1 - scrollProgress) * -12}deg) rotateZ(${(1 - scrollProgress) * -5}deg) translateZ(0)`,
-                  WebkitTransform: `rotateX(${(1 - scrollProgress) * 35}deg) rotateY(${(1 - scrollProgress) * -12}deg) rotateZ(${(1 - scrollProgress) * -5}deg) translateZ(0)`
-                }}
-              >
-                <img 
-                  src={mkDotInterface} 
-                  alt="Interface DOTWEB" 
-                  className="w-[280px] sm:w-[320px] md:w-[550px] lg:w-[700px] h-auto object-contain relative z-10"
-                  style={{ filter: `drop-shadow(0 25px 35px rgba(0,0,0,0.15))` }}
-                />
+              <div className="will-change-transform" style={{ transform: `rotateX(${(1 - scrollProgress) * 35}deg) rotateY(${(1 - scrollProgress) * -12}deg) rotateZ(${(1 - scrollProgress) * -5}deg) translateZ(0)`, WebkitTransform: `rotateX(${(1 - scrollProgress) * 35}deg) rotateY(${(1 - scrollProgress) * -12}deg) rotateZ(${(1 - scrollProgress) * -5}deg) translateZ(0)` }}>
+                <img src={mkDotInterface} alt="Interface DOTWEB" className="w-[280px] sm:w-[320px] md:w-[550px] lg:w-[700px] h-auto object-contain relative z-10" style={{ filter: `drop-shadow(0 25px 35px rgba(0,0,0,0.15))` }} />
               </div>
               
-              {/* FEATURES - DESKTOP */}
-              <div 
-                className="absolute inset-0 z-20 hidden md:block"
-                style={{ opacity: scrollProgress > 0.6 ? 1 : 0, transform: `translateY(${scrollProgress > 0.6 ? 0 : '20px'})`, transition: 'all 0.6s ease-out' }}
-              >
-                <div onClick={() => toggleFeature(101)} className="absolute top-[28%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest flex items-center gap-1"><WifiSlash size={14} weight="bold" /> Modo Offline</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 101 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 101 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Sem internet? O app salva o ponto no dispositivo e sincroniza automaticamente depois.</p>
-                  </div>
-                </div>
-                <div onClick={() => toggleFeature(102)} className="absolute top-[24%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Notificações</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 102 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 102 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Avisos urgentes com confirmação de leitura instantânea.</p>
-                  </div>
-                </div>
-                <div onClick={() => toggleFeature(103)} className="absolute top-[48%] left-[-2%] lg:left-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Status Atual</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 103 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 103 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Acompanhe se a equipe está trabalhando ou em intervalo.</p>
-                  </div>
-                </div>
-                <div onClick={() => toggleFeature(104)} className="absolute top-[46%] right-[-2%] lg:right-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Carga Diária</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 104 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 104 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Total trabalhado no dia atualizado em tempo real.</p>
-                  </div>
-                </div>
-                <div onClick={() => toggleFeature(105)} className="absolute top-[68%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Mural de Avisos</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 105 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 105 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Mural para o RH enviar recados importantes para todos.</p>
-                  </div>
-                </div>
-                <div onClick={() => toggleFeature(106)} className="absolute top-[66%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Equipe Online</span>
-                    <CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 106 ? 'rotate-90' : ''}`} weight="bold" />
-                  </div>
-                  <div className={`overflow-hidden transition-all duration-500 ${activeFeature === 106 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] font-semibold text-gray-700 leading-snug">Visão rápida de quem da equipe está com o ponto rodando.</p>
-                  </div>
-                </div>
+              {/* DESKTOP FEATURES (Encurtado p/ não estourar linhas no código, igual ao anterior) */}
+              <div className="absolute inset-0 z-20 hidden md:block" style={{ opacity: scrollProgress > 0.6 ? 1 : 0, transform: `translateY(${scrollProgress > 0.6 ? 0 : '20px'})`, transition: 'all 0.6s ease-out' }}>
+                <div onClick={() => toggleFeature(101)} className="absolute top-[28%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest flex items-center gap-1"><WifiSlash size={14} weight="bold" /> Modo Offline</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 101 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 101 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Sem internet? O app salva o ponto e sincroniza automaticamente depois.</p></div></div>
+                <div onClick={() => toggleFeature(102)} className="absolute top-[24%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Notificações</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 102 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 102 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Avisos urgentes com confirmação de leitura instantânea.</p></div></div>
+                <div onClick={() => toggleFeature(103)} className="absolute top-[48%] left-[-2%] lg:left-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Status Atual</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 103 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 103 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Acompanhe se a equipe está trabalhando ou em intervalo.</p></div></div>
+                <div onClick={() => toggleFeature(104)} className="absolute top-[46%] right-[-2%] lg:right-[2%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Carga Diária</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 104 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 104 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Total trabalhado no dia atualizado em tempo real.</p></div></div>
+                <div onClick={() => toggleFeature(105)} className="absolute top-[68%] left-[2%] lg:left-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Mural de Avisos</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 105 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 105 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Mural para o RH enviar recados importantes para todos.</p></div></div>
+                <div onClick={() => toggleFeature(106)} className="absolute top-[66%] right-[2%] lg:right-[5%] pointer-events-auto cursor-pointer bg-white/60 hover:bg-white/90 backdrop-blur-xl border border-white/50 shadow-2xl rounded-2xl py-3 px-5 w-max max-w-[240px] transition-all" style={{ WebkitBackdropFilter: 'blur(24px)' }}><div className="flex items-center justify-between gap-3"><span className="text-[11px] font-black text-[#0400FF] uppercase tracking-widest">Equipe Online</span><CaretRight className={`w-4 h-4 text-[#0400FF] transition-transform ${activeFeature === 106 ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-500 ${activeFeature === 106 ? 'max-h-32 mt-3 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[11px] font-semibold text-gray-700 leading-snug">Visão rápida de quem da equipe está com o ponto rodando.</p></div></div>
               </div>
 
-              {/* FEATURES - MOBILE */}
-              <div 
-                className="w-full max-w-[320px] mx-auto md:hidden flex flex-col gap-2 mt-4 px-2 pointer-events-auto"
-                style={{ opacity: scrollProgress > 0.6 ? 1 : 0, transition: 'opacity 0.6s ease-out' }}
-              >
-                {[
-                  { id: 1, title: 'Modo Offline', desc: 'Sem internet? O app salva o ponto e sincroniza automaticamente depois.' },
-                  { id: 2, title: 'Notificações', desc: 'Avisos urgentes com confirmação de leitura instantânea.' },
-                  { id: 3, title: 'Status Atual', desc: 'Acompanhe se a equipe está trabalhando ou em intervalo.' },
-                  { id: 4, title: 'Carga Diária', desc: 'Total trabalhado no dia atualizado em tempo real.' },
-                  { id: 5, title: 'Mural de Avisos', desc: 'Mural para o RH enviar recados importantes para todos.' },
-                  { id: 6, title: 'Equipe Online', desc: 'Visão rápida de quem da equipe está com o ponto rodando.' }
-                ].map((feat) => (
-                  <div key={feat.id} onClick={() => toggleFeature(feat.id)} className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 w-full text-left transition-all cursor-pointer">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-black text-[#0400FF] uppercase tracking-widest flex items-center gap-1">
-                        {feat.id === 1 && <WifiSlash size={12} weight="bold" />} {feat.title}
-                      </span>
-                      <CaretRight className={`w-3 h-3 text-[#0400FF] transition-transform ${activeFeature === feat.id ? 'rotate-90' : ''}`} weight="bold" />
-                    </div>
-                    <div className={`overflow-hidden transition-all duration-300 ${activeFeature === feat.id ? 'max-h-20 mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <p className="text-[10px] font-semibold text-gray-500 leading-snug">{feat.desc}</p>
-                    </div>
-                  </div>
+              {/* MOBILE FEATURES */}
+              <div className="w-full max-w-[320px] mx-auto md:hidden flex flex-col gap-2 mt-4 px-2 pointer-events-auto" style={{ opacity: scrollProgress > 0.6 ? 1 : 0, transition: 'opacity 0.6s ease-out' }}>
+                {[{ id: 1, title: 'Modo Offline', desc: 'Sem internet? O app salva o ponto e sincroniza automaticamente depois.' },{ id: 2, title: 'Notificações', desc: 'Avisos urgentes com confirmação de leitura instantânea.' },{ id: 3, title: 'Status Atual', desc: 'Acompanhe se a equipe está trabalhando ou em intervalo.' },{ id: 4, title: 'Carga Diária', desc: 'Total trabalhado no dia atualizado em tempo real.' },{ id: 5, title: 'Mural de Avisos', desc: 'Mural para o RH enviar recados importantes para todos.' },{ id: 6, title: 'Equipe Online', desc: 'Visão rápida de quem da equipe está com o ponto rodando.' }].map((feat) => (
+                  <div key={feat.id} onClick={() => toggleFeature(feat.id)} className="bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 w-full text-left transition-all cursor-pointer"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-black text-[#0400FF] uppercase tracking-widest flex items-center gap-1">{feat.id === 1 && <WifiSlash size={12} weight="bold" />} {feat.title}</span><CaretRight className={`w-3 h-3 text-[#0400FF] transition-transform ${activeFeature === feat.id ? 'rotate-90' : ''}`} weight="bold" /></div><div className={`overflow-hidden transition-all duration-300 ${activeFeature === feat.id ? 'max-h-20 mt-2 opacity-100' : 'max-h-0 opacity-0'}`}><p className="text-[10px] font-semibold text-gray-500 leading-snug">{feat.desc}</p></div></div>
                 ))}
               </div>
-
             </div>
           </div>
         </div>
@@ -281,7 +294,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         </div>
       </section>
 
-      {/* BENTO GRID (SISTEMA DE FEATURES COMPLETO) */}
+      {/* BENTO GRID */}
       <section id="sistema" className="py-16 sm:py-24 md:py-32 px-4 md:px-6 bg-black relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="mb-10 sm:mb-12 md:mb-16 text-center md:text-left">
@@ -290,70 +303,52 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             </h2>
           </div>
 
-          {/* DIVISÃO: GESTOR */}
           <div className="mb-6 flex items-center gap-4">
             <h3 className="text-xl md:text-2xl font-black text-[#0400FF] uppercase tracking-widest">Para o Gestor</h3>
             <div className="h-px bg-white/10 flex-1"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(280px,auto)] md:auto-rows-[300px] mb-16">
-            {/* Card 1 - Span 2 */}
             <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">01</span>
                <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Cerca Virtual Antifraude</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Defina o local exato da batida. Bateu fora do raio ou em horário não autorizado? O sistema bloqueia na hora e te avisa. Zero surpresas.</p>
             </div>
-
-            {/* Card 2 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">02</span>
                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">100% Offline</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">A internet caiu? O sistema guarda a hora no celular e sincroniza sozinho depois. Fim das desculpas.</p>
             </div>
-
-            {/* Card 3 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">03</span>
                <h3 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Tempo Real</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Saiba na palma da mão quem chegou, quem está no intervalo e quem faltou hoje. Atualizado segundo a segundo.</p>
             </div>
-
-            {/* Card 4 - Span 2 */}
             <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">04</span>
                <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Fim da Matemática</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Esqueça horas perdidas somando planilhas e cadernos. O sistema calcula automaticamente o saldo de horas, atrasos e faltas da sua equipe.</p>
             </div>
-
-            {/* Card 5 - Span 2 */}
             <div className="md:col-span-2 anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">05</span>
                <h3 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Assinatura Digital</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg max-w-xl relative z-10">Fechamento em 1 clique: envie o espelho direto para o app e receba a assinatura da equipe na mesma hora. Sem imprimir papel.</p>
             </div>
-
-            {/* Card 6 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">06</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Atestados</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Foto do atestado via app para você aprovar. Adeus mensagens perdidas no WhatsApp.</p>
             </div>
-
-            {/* Card 7 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">07</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Auditoria Invisível</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Ajustou o ponto? O sistema grava um rastro transparente, blindando sua empresa juridicamente.</p>
             </div>
-
-            {/* Card 8 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">08</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Comunicados</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base md:text-lg relative z-10 leading-snug">Envie avisos e saiba quem leu e a que horas leu. O fim do "eu não vi no grupo".</p>
             </div>
-
-            {/* Card 9 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">09</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Info a 1 Clique</h3>
@@ -361,28 +356,22 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             </div>
           </div>
 
-          {/* DIVISÃO: COLABORADOR */}
           <div className="mb-6 flex items-center gap-4">
             <h3 className="text-xl md:text-2xl font-black text-[#0400FF] uppercase tracking-widest">Para a Equipe</h3>
             <div className="h-px bg-white/10 flex-1"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[minmax(250px,auto)] md:auto-rows-[280px]">
-            {/* Card 10 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">10</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Direto ao Ponto</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base relative z-10 leading-snug">App super leve, não trava o celular e é fácil de usar. Bater o ponto leva literalmente 1 segundo.</p>
             </div>
-
-            {/* Card 11 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">11</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Fim das Dúvidas</h3>
                <p className="text-gray-300 font-medium text-sm sm:text-base relative z-10 leading-snug">O próprio funcionário acompanha suas horas no celular, diminuindo perguntas no seu ouvido.</p>
             </div>
-
-            {/* Card 12 - Span 1 */}
             <div className="anime-shine-card rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 relative group flex flex-col justify-end">
                <span className="text-white/20 font-black text-lg sm:text-xl md:text-2xl tracking-tighter mb-auto block">12</span>
                <h3 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter mb-2 sm:mb-3 md:mb-4 text-white mt-8 md:mt-0">Privacidade 100%</h3>
@@ -393,7 +382,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         </div>
       </section>
 
-      {/* SEÇÃO DE PREÇOS */}
+      {/* SEÇÃO DE PREÇOS COM OS BOTÕES ATUALIZADOS */}
       <section id="precos" className="py-16 sm:py-20 md:py-32 px-4 md:px-6 bg-white text-black relative rounded-t-[30px] sm:rounded-t-[40px] md:rounded-t-[80px] -mt-4 sm:-mt-5 md:-mt-10 z-20">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10 sm:mb-12 md:mb-20">
@@ -427,15 +416,13 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
                  <p className="text-[9px] sm:text-[10px] md:text-xs font-bold text-gray-400 flex justify-between">Colab. extra: <span className="font-bold text-gray-700">+R$ 10,00/mês</span></p>
               </div>
 
-              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 border-2 border-black rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Start</button>
+              {/* BOTÃO START ATUALIZADO */}
+              <button onClick={() => abrirCheckout('start', 10)} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 border-2 border-black rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Start</button>
             </div>
 
             {/* PLANO SYNC */}
             <div className="bg-[#0400FF] text-white rounded-[24px] sm:rounded-[30px] md:rounded-[40px] p-6 sm:p-8 md:p-10 transform lg:-translate-y-8 shadow-2xl shadow-blue-500/30 flex flex-col relative group transition-transform hover:-translate-y-2 lg:hover:-translate-y-10 duration-300">
-              <div className="absolute top-4 right-4 sm:top-5 sm:right-5 md:top-6 md:right-6 bg-white/20 backdrop-blur-md border border-white/20 text-white px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-[8px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest animate-pulse shadow-[0_4px_15px_rgba(0,0,0,0.1)]">
-                O MAIS QUERIDO
-              </div>
-              
+              <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md border border-white/20 text-white px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest animate-pulse">O MAIS QUERIDO</div>
               <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-1 mt-3 sm:mt-4 text-white">Sync</h3>
               <p className="text-[10px] sm:text-xs text-blue-200 font-bold uppercase tracking-widest mb-6 sm:mb-8">Negócios em Expansão</p>
               
@@ -464,7 +451,8 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
                 <li className="flex items-start gap-2 sm:gap-3"><CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white shrink-0" weight="bold" /> Espelho de Ponto em 1 Clique</li>
               </ul>
 
-              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 bg-white text-[#0400FF] rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-xl">Assinar Sync</button>
+              {/* BOTÃO SYNC ATUALIZADO */}
+              <button onClick={() => abrirCheckout('sync', 20)} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 bg-white text-[#0400FF] rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-xl">Assinar Sync</button>
             </div>
 
             {/* PLANO FLOW */}
@@ -492,23 +480,20 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
                  <p className="text-[9px] sm:text-[10px] md:text-xs font-bold text-gray-400 flex justify-between">Colab. extra: <span className="font-bold text-gray-700">+R$ 4,00/mês</span></p>
               </div>
 
-              <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 border-2 border-black rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Flow</button>
+              {/* BOTÃO FLOW ATUALIZADO */}
+              <button onClick={() => abrirCheckout('flow', 30)} className="w-full mt-6 sm:mt-8 py-3 sm:py-4 md:py-5 border-2 border-black rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest hover:bg-black hover:text-white transition-all active:scale-95">Assinar Flow</button>
             </div>
 
           </div>
           
-          {/* BANNER AVISO */}
           <div className="mt-8 sm:mt-10 md:mt-12 text-center bg-[#0400FF]/5 border-2 border-dashed border-[#0400FF]/30 p-4 sm:p-6 rounded-2xl sm:rounded-3xl max-w-3xl mx-auto group hover:bg-[#0400FF] transition-colors duration-500">
              <p className="text-[11px] sm:text-xs md:text-sm font-black text-[#0400FF] flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 group-hover:text-white transition-colors">
               <Lightning className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" weight="bold" /> Assine o Anual no Sync ou Flow e leve 2 meses de graça.
             </p>
-             <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-500 mt-2 group-hover:text-blue-100 transition-colors">Precisa de algo sob medida? Chama a gente no WhatsApp abaixo.</p>
           </div>
 
-          {/* PLANO INFINITY */}
           <div className="premium-glow-card mt-8 sm:mt-12 md:mt-16 bg-white/80 backdrop-blur-2xl border border-white/50 text-black p-6 sm:p-8 md:p-12 rounded-[24px] sm:rounded-[30px] md:rounded-[40px] flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 shadow-xl relative overflow-hidden group" style={{ WebkitBackdropFilter: 'blur(24px)' }}>
             <div className="absolute inset-0 bg-gradient-to-r from-[#0400FF]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
-            
             <div className="text-center md:text-left relative z-10">
               <div className="inline-flex items-center gap-1 sm:gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[#0400FF]/10 border border-[#0400FF]/20 text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-[#0400FF] mb-4 sm:mb-5">
                 <Crown weight="fill" className="w-3 h-3 sm:w-4 sm:h-4" /> Plano Customizado
@@ -516,14 +501,12 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
               <h3 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 sm:mb-3">Infinity</h3>
               <p className="text-gray-600 font-medium text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed">Sua empresa tem mais de 30 funcionários? Tenha servidores dedicados, implantação guiada pelo nosso time e valores ainda mais agressivos por funcionário.</p>
             </div>
-            
             <div className="relative z-10 w-full md:w-auto flex-shrink-0">
                <button onClick={() => window.open(linkWhatsTeste, '_blank')} className="w-full md:w-auto px-8 py-4 sm:px-10 sm:py-5 rounded-full font-black text-[10px] sm:text-xs md:text-sm uppercase tracking-widest bg-[#0400FF] text-white hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all shadow-[0_10px_30px_rgba(4,0,255,0.3)]">
                   Falar com Consultor
                </button>
             </div>
           </div>
-
         </div>
       </section>
 
