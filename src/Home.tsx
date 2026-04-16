@@ -4,7 +4,8 @@ import {
   CaretRight, Crown, WifiSlash, X, Spinner
 } from '@phosphor-icons/react';
 import mkDotInterface from './assets/mk-dotinterface.png';
-import { supabase } from './supabase'; // CONEXÃO COM O BANCO E FUNCTIONS!
+import logoDotweb from './assets/logo.png'; // IMPORTAÇÃO DA SUA LOGO
+import { supabase } from './supabase';
 
 export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irParaTrabalhe }: { irParaTeste: () => void, irParaPrivacidade: () => void, irParaTermos: () => void, irParaTrabalhe: () => void }) {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -21,7 +22,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
     nome: '',
     email: '',
     documento: '',
-    colaboradores: 10 // Padrão base
+    colaboradores: 10 
   });
 
   const linkWhatsTeste = "https://wa.me/5514996392691?text=Olá,%20eu%20quero%20testar%20a%20dotweb%20por%207%20dias!%20🕑";
@@ -44,7 +45,6 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const toggleFeature = (id: number) => setActiveFeature(activeFeature === id ? null : id);
 
-  // FUNÇÃO PARA ABRIR O MODAL DE PAGAMENTO
   const abrirCheckout = (plano: string, minColab: number) => {
     setPlanoSelecionado(plano);
     setFormCheckout(prev => ({ ...prev, colaboradores: minColab }));
@@ -53,7 +53,6 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
     setModalCheckoutAberto(true);
   };
 
-  // FUNÇÃO QUE CHAMA O SUPABASE E O ASAAS
   const handleGerarPagamento = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoadingCheckout(true);
@@ -64,7 +63,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         body: {
           name: formCheckout.nome,
           email: formCheckout.email,
-          cpfCnpj: formCheckout.documento.replace(/\D/g, ''), // Limpa máscara
+          cpfCnpj: formCheckout.documento.replace(/\D/g, ''),
           planKey: planoSelecionado,
           employeesCount: formCheckout.colaboradores,
           cycle: cicloPagamento
@@ -74,7 +73,6 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Redireciona para o link do Asaas!
       if (data?.paymentUrl) {
         window.location.href = data.paymentUrl;
       } else {
@@ -91,7 +89,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
   return (
     <div className="min-h-screen bg-white text-black font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white relative">
 
-      {/* MODAL DE CHECKOUT (SOBREPÕE A TELA) */}
+      {/* MODAL DE CHECKOUT */}
       {modalCheckoutAberto && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md rounded-[30px] p-8 relative shadow-2xl animate-phone-up">
@@ -138,94 +136,23 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
               {erroCheckout && <p className="text-[11px] font-bold text-red-500 text-center mt-2">{erroCheckout}</p>}
 
               <button type="submit" disabled={loadingCheckout} className="w-full mt-4 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2">
-                {loadingCheckout ? <Spinner size={18} className="animate-spin" /> : 'Ir para Pagamento Segurto'}
+                {loadingCheckout ? <Spinner size={18} className="animate-spin" /> : 'Ir para Pagamento Seguro'}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* ESTILOS (Mesmos de antes) */}
-      <style>{`
-        html { scroll-behavior: smooth; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        @keyframes phone-up { 0% { transform: translateY(100px); opacity: 0; } 100% { transform: translateY(0px); opacity: 1; } }
-        .animate-phone-up { animation: phone-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-        .perspective-container { perspective: 2000px; }
-
-        .anime-shine-card {
-          position: relative;
-          overflow: hidden;
-          background: rgba(255, 255, 255, 0.03);
-          -webkit-backdrop-filter: blur(15px);
-          backdrop-filter: blur(15px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.4s ease;
-          transform: translateZ(0);
-        }
-        .anime-shine-card::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -150%;
-          width: 60%;
-          height: 100%;
-          background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent);
-          transform: skewX(-25deg);
-          transition: 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .anime-shine-card:hover::after { left: 150%; }
-        .anime-shine-card:hover {
-          border-color: rgba(255, 255, 255, 0.35);
-          box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
-          background: rgba(255, 255, 255, 0.06);
-          transform: translateY(-5px) translateZ(0);
-        }
-
-        .flow-hover-card { transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .flow-hover-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-          border-color: rgba(0, 0, 0, 0.05);
-        }
-
-        @keyframes shine-border { to { background-position: 200% center; } }
-        .premium-glow-card {
-          position: relative;
-          transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-          border: 2px solid rgba(255, 255, 255, 0.5);
-          transform: translateZ(0);
-        }
-        .premium-glow-card:hover {
-          transform: translateY(-12px) scale(1.02) translateZ(0);
-          border-color: transparent;
-          box-shadow: 0 30px 60px -15px rgba(4, 0, 255, 0.4);
-        }
-        .premium-glow-card::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: 3px;
-          background: linear-gradient(45deg, #0400FF, #4facfe, #0400FF);
-          background-size: 200% auto;
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: destination-out;
-          mask-composite: exclude;
-          opacity: 0;
-          transition: opacity 0.5s;
-          animation: shine-border 3s linear infinite;
-        }
-        .premium-glow-card:hover::before { opacity: 1; }
-      `}</style>
-
-      {/* NAVBAR */}
+      {/* NAVBAR COM LOGO ATUALIZADA */}
       <nav className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] md:w-[90%] max-w-5xl rounded-full border border-gray-200/50 bg-white/70 backdrop-blur-xl py-3 px-4 md:py-4 md:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]`} style={{ WebkitBackdropFilter: 'blur(24px)' }}>
         <div className="flex justify-between items-center">
           <div onClick={scrollToTop} className="flex items-center gap-2 md:gap-3 cursor-pointer group">
-            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-lg md:text-xl italic bg-[#0400FF] text-white shadow-[0_0_15px_rgba(4,0,255,0.4)]`}>D</div>
+            {/* LOGO PNG NO LUGAR DO "D" */}
+            <img 
+              src={logoDotweb} 
+              alt="Logo Dotweb" 
+              className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300" 
+            />
             <span className={`font-black text-xl md:text-2xl tracking-tighter uppercase hidden sm:block text-black`}>DOTWEB</span>
           </div>
           <div className={`hidden md:flex gap-8 font-black text-xs uppercase tracking-[0.15em] text-gray-600`}>
@@ -248,7 +175,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
         </div>
 
         <h1 className="text-[40px] sm:text-[45px] md:text-[120px] lg:text-[140px] font-black uppercase leading-[0.85] md:leading-[0.8] tracking-[-0.04em] relative z-10 text-black">
-          O PONTO <br /> <span className="text-[#0400FF]">SEM CAÔ.</span>
+          CONTROLE <br /> <span className="text-[#0400FF]">DE PONTO.</span>
         </h1>
 
         <p className="mt-5 sm:mt-6 md:mt-10 text-sm sm:text-base md:text-xl text-gray-600 font-medium max-w-2xl mx-auto relative z-10 px-2">
