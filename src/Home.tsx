@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowRight, Lightning, CheckCircle, WhatsappLogo,
-  CaretRight, Crown, WifiSlash, X, Spinner
+  CaretRight, Crown, WifiSlash, X
 } from '@phosphor-icons/react';
 import mkDotInterface from './assets/mk-dotinterface.png';
 import logoDotweb from './assets/logo.png';
