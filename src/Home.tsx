@@ -4,14 +4,14 @@ import {
   CaretRight, Crown, WifiSlash, X, Spinner
 } from '@phosphor-icons/react';
 import mkDotInterface from './assets/mk-dotinterface.png';
-import logoDotweb from './assets/logo.png'; // IMPORTAÇÃO DA SUA LOGO
+import logoDotweb from './assets/logo.png';
 import { supabase } from './supabase';
+import LogoSkeletonLoader from './components/LogoSkeletonLoader'; // IMPORTAÇÃO DO LOADER
 
 export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irParaTrabalhe }: { irParaTeste: () => void, irParaPrivacidade: () => void, irParaTermos: () => void, irParaTrabalhe: () => void }) {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeFeature, setActiveFeature] = useState<number | null>(null);
 
-  // ESTADOS DO CHECKOUT
   const [modalCheckoutAberto, setModalCheckoutAberto] = useState(false);
   const [planoSelecionado, setPlanoSelecionado] = useState<string>('');
   const [cicloPagamento, setCicloPagamento] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
@@ -19,13 +19,10 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
   const [erroCheckout, setErroCheckout] = useState('');
 
   const [formCheckout, setFormCheckout] = useState({
-    nome: '',
-    email: '',
-    documento: '',
-    colaboradores: 10 
+    nome: '', email: '', documento: '', colaboradores: 10 
   });
 
-  const linkWhatsTeste = "https://wa.me/5514996392691?text=Olá,%20eu%20quero%20testar%20a%20dotweb%20por%207%20dias!%20🕑";
+  const linkWhatsTeste = "https://wa.me/5514996392691";
 
   useEffect(() => {
     let ticking = false;
@@ -89,70 +86,104 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
   return (
     <div className="min-h-screen bg-white text-black font-inter overflow-x-hidden selection:bg-[#0400FF] selection:text-white relative">
 
-      {/* MODAL DE CHECKOUT */}
+      {/* MODAL DE CHECKOUT COM O LOADER EMBUTIDO */}
       {modalCheckoutAberto && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-[30px] p-8 relative shadow-2xl animate-phone-up">
-            <button onClick={() => setModalCheckoutAberto(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors">
-              <X size={24} weight="bold" />
-            </button>
-
-            <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Finalizar Assinatura</h3>
-            <p className="text-xs font-bold text-[#0400FF] uppercase tracking-widest mb-6">Plano {planoSelecionado}</p>
-
-            <form onSubmit={handleGerarPagamento} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nome Completo / Razão Social</label>
-                <input required type="text" value={formCheckout.nome} onChange={e => setFormCheckout({ ...formCheckout, nome: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">CPF ou CNPJ</label>
-                  <input required type="text" placeholder="Apenas números" value={formCheckout.documento} onChange={e => setFormCheckout({ ...formCheckout, documento: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Colaboradores</label>
-                  <input required type="number" min={planoSelecionado === 'start' ? 1 : planoSelecionado === 'sync' ? 20 : 30} value={formCheckout.colaboradores} onChange={e => setFormCheckout({ ...formCheckout, colaboradores: Number(e.target.value) })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">E-mail Comercial</label>
-                <input required type="email" value={formCheckout.email} onChange={e => setFormCheckout({ ...formCheckout, email: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
-              </div>
-
-              <div className="pt-2">
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Ciclo de Pagamento</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => setCicloPagamento('MONTHLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all ${cicloPagamento === 'MONTHLY' ? 'border-[#0400FF] bg-[#0400FF]/5 text-[#0400FF]' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>Mensal</button>
-                  <button type="button" onClick={() => setCicloPagamento('YEARLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all relative ${cicloPagamento === 'YEARLY' ? 'border-green-500 bg-green-50 text-green-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>
-                    Anual (PIX)
-                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full animate-pulse">2 MESES OFF</span>
-                  </button>
-                </div>
-              </div>
-
-              {erroCheckout && <p className="text-[11px] font-bold text-red-500 text-center mt-2">{erroCheckout}</p>}
-
-              <button type="submit" disabled={loadingCheckout} className="w-full mt-4 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2">
-                {loadingCheckout ? <Spinner size={18} className="animate-spin" /> : 'Ir para Pagamento Seguro'}
+          <div className="bg-white w-full max-w-md rounded-[30px] p-8 relative shadow-2xl animate-phone-up min-h-[450px] flex flex-col justify-center">
+            
+            {/* O botão de fechar (desabilitado se estiver carregando) */}
+            {!loadingCheckout && (
+              <button onClick={() => setModalCheckoutAberto(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors">
+                <X size={24} weight="bold" />
               </button>
-            </form>
+            )}
+
+            {/* SE ESTIVER CARREGANDO, MOSTRA O LOADER PREMIUM */}
+            {loadingCheckout ? (
+              <div className="flex flex-col items-center justify-center py-10 animate-fade-in">
+                <LogoSkeletonLoader size="lg" text="GERANDO PAGAMENTO SEGURO..." />
+              </div>
+            ) : (
+              /* SE NÃO ESTIVER CARREGANDO, MOSTRA O FORMULÁRIO NORMAL */
+              <div className="animate-fade-in">
+                <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">Finalizar Assinatura</h3>
+                <p className="text-xs font-bold text-[#0400FF] uppercase tracking-widest mb-6">Plano {planoSelecionado}</p>
+
+                <form onSubmit={handleGerarPagamento} className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Nome Completo / Razão Social</label>
+                    <input required type="text" value={formCheckout.nome} onChange={e => setFormCheckout({ ...formCheckout, nome: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">CPF ou CNPJ</label>
+                      <input required type="text" placeholder="Apenas números" value={formCheckout.documento} onChange={e => setFormCheckout({ ...formCheckout, documento: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Colaboradores</label>
+                      <input required type="number" min={planoSelecionado === 'start' ? 1 : planoSelecionado === 'sync' ? 20 : 30} value={formCheckout.colaboradores} onChange={e => setFormCheckout({ ...formCheckout, colaboradores: Number(e.target.value) })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">E-mail Comercial</label>
+                    <input required type="email" value={formCheckout.email} onChange={e => setFormCheckout({ ...formCheckout, email: e.target.value })} className="w-full bg-[#F8F9FA] border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-black transition-all font-medium" />
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Ciclo de Pagamento</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => setCicloPagamento('MONTHLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all ${cicloPagamento === 'MONTHLY' ? 'border-[#0400FF] bg-[#0400FF]/5 text-[#0400FF]' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>Mensal</button>
+                      <button type="button" onClick={() => setCicloPagamento('YEARLY')} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border-2 transition-all relative ${cicloPagamento === 'YEARLY' ? 'border-green-500 bg-green-50 text-green-600' : 'border-gray-200 text-gray-400 hover:border-gray-300'}`}>
+                        Anual (PIX)
+                        <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[8px] px-2 py-0.5 rounded-full animate-pulse">2 MESES OFF</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {erroCheckout && <p className="text-[11px] font-bold text-red-500 text-center mt-2">{erroCheckout}</p>}
+
+                  <button type="submit" disabled={loadingCheckout} className="w-full mt-4 bg-black text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-900 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    Ir para Pagamento Seguro
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {/* ESTILOS (Adicionei o fade-in) */}
+      <style>{`
+        html { scroll-behavior: smooth; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes phone-up { 0% { transform: translateY(100px); opacity: 0; } 100% { transform: translateY(0px); opacity: 1; } }
+        .animate-phone-up { animation: phone-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .perspective-container { perspective: 2000px; }
+
+        /* RESTANTE DOS ESTILOS COMO JÁ ESTAVAM... */
+        .anime-shine-card { position: relative; overflow: hidden; background: rgba(255, 255, 255, 0.03); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.4s ease; transform: translateZ(0); }
+        .anime-shine-card::after { content: ""; position: absolute; top: 0; left: -150%; width: 60%; height: 100%; background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.25), transparent); transform: skewX(-25deg); transition: 0.75s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .anime-shine-card:hover::after { left: 150%; }
+        .anime-shine-card:hover { border-color: rgba(255, 255, 255, 0.35); box-shadow: 0 0 40px rgba(255, 255, 255, 0.05); background: rgba(255, 255, 255, 0.06); transform: translateY(-5px) translateZ(0); }
+        .flow-hover-card { transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .flow-hover-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08); border-color: rgba(0, 0, 0, 0.05); }
+        @keyframes shine-border { to { background-position: 200% center; } }
+        .premium-glow-card { position: relative; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); border: 2px solid rgba(255, 255, 255, 0.5); transform: translateZ(0); }
+        .premium-glow-card:hover { transform: translateY(-12px) scale(1.02) translateZ(0); border-color: transparent; box-shadow: 0 30px 60px -15px rgba(4, 0, 255, 0.4); }
+        .premium-glow-card::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 3px; background: linear-gradient(45deg, #0400FF, #4facfe, #0400FF); background-size: 200% auto; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: destination-out; mask-composite: exclude; opacity: 0; transition: opacity 0.5s; animation: shine-border 3s linear infinite; }
+        .premium-glow-card:hover::before { opacity: 1; }
+      `}</style>
 
       {/* NAVBAR COM LOGO ATUALIZADA */}
       <nav className={`fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 w-[92%] md:w-[90%] max-w-5xl rounded-full border border-gray-200/50 bg-white/70 backdrop-blur-xl py-3 px-4 md:py-4 md:px-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)]`} style={{ WebkitBackdropFilter: 'blur(24px)' }}>
         <div className="flex justify-between items-center">
           <div onClick={scrollToTop} className="flex items-center gap-2 md:gap-3 cursor-pointer group">
-            {/* LOGO PNG NO LUGAR DO "D" */}
-            <img 
-              src={logoDotweb} 
-              alt="Logo Dotweb" 
-              className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300" 
-            />
+            <img src={logoDotweb} alt="Logo Dotweb" className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300" />
             <span className={`font-black text-xl md:text-2xl tracking-tighter uppercase hidden sm:block text-black`}>DOTWEB</span>
           </div>
           <div className={`hidden md:flex gap-8 font-black text-xs uppercase tracking-[0.15em] text-gray-600`}>
@@ -316,7 +347,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
             <h2 className="text-[32px] sm:text-[40px] md:text-[80px] font-black uppercase leading-[0.9] md:leading-[0.85] tracking-tighter mb-3 sm:mb-4 md:mb-6 text-black">
               JUSTO PARA <br /> O SEU CAIXA.
             </h2>
-            <p className="text-sm sm:text-lg md:text-xl text-gray-500 font-medium max-w-xl mx-auto px-2">Sem taxas escondidas. Assine o pacote base e escale pagando centavos apenas por quem entra a mais.</p>
+            <p className="text-sm sm:text-lg md:text-xl text-gray-500 font-medium max-w-xl mx-auto px-2">Sem taxas escondidas. Assine o <b>Start</b> e escale pagando centavos apenas por quem entra a mais.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-8 md:gap-6 items-stretch">
@@ -443,7 +474,7 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
 
           <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col gap-3 sm:gap-4 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#0400FF] flex items-center justify-center text-white font-black text-lg sm:text-xl italic tracking-tighter">D</div>
+                 <img src={logoDotweb} alt="Logo Dotweb" className="w-8 h-8 sm:w-10 sm:h-10 object-contain" /> 
               <h2 className="text-2xl sm:text-3xl font-black text-black uppercase tracking-tighter">DOTWEB</h2>
             </div>
             <p className="text-[11px] sm:text-xs text-gray-500 font-medium max-w-xs mx-auto sm:mx-0">Ponto digital e gestão de equipe sem complicação para quem faz o negócio girar.</p>
@@ -490,10 +521,9 @@ export default function Home({ irParaTeste, irParaPrivacidade, irParaTermos, irP
 
         <div className="max-w-7xl mx-auto mt-10 sm:mt-12 md:mt-16 pt-5 sm:pt-6 md:pt-8 border-t border-gray-200">
           <p className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest flex flex-col sm:flex-row items-center sm:justify-between gap-2 sm:gap-3 text-center sm:text-left">
-            <span>© 2026 DOTWEB POINT SOLUTIONS LTDA.</span>
-            <span className="hidden sm:inline">Todos os direitos reservados.</span>
-            <span>CNPJ 99.999.999/0001-99</span>
-            <span className="hidden md:inline">Tecnologia feita para quem faz acontecer.</span>
+            <span>2026 DOTWEB</span>
+            <span>CNPJ 44.433.234/0003-71</span>
+            <span className="hidden md:inline">SANTSTUDIO ©</span>
           </p>
         </div>
       </footer>

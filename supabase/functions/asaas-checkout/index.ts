@@ -58,9 +58,9 @@ Deno.serve(async (req) => {
         nextDueDate: new Date().toISOString().split('T')[0], 
         cycle: cycle, 
         description: `Dotweb - Plano ${plan.name} (${employeesCount} colaboradores)`,
-        // AQUI ESTÁ A REGRA DE REDIRECIONAMENTO
+        // AQUI ESTÁ A REGRA DE REDIRECIONAMENTO CORRIGIDA
         callback: {
-          successUrl: "http://localhost:5173/boas-vindas",
+          successUrl: "https://dotweb.app.br",
           autoRedirect: true
         }
       })

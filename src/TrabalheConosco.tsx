@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CaretLeft, Code, PaintBrush, VideoCamera, Paperclip } from '@phosphor-icons/react';
 import { supabase } from './supabase'; // IMPORTAMOS O BANCO AQUI!
+import logoDotweb from './assets/logo.png';
 
 export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => void }) {
   const [nome, setNome] = useState("");
@@ -103,7 +104,14 @@ export default function TrabalheConosco({ voltarInicio }: { voltarInicio: () => 
       <nav className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] md:w-[90%] max-w-5xl rounded-full border border-gray-200/50 bg-white/80 backdrop-blur-xl py-3 px-4 md:py-4 md:px-6 shadow-sm">
         <div className="flex justify-between items-center">
           <div onClick={voltarInicio} className="flex items-center gap-2 md:gap-3 cursor-pointer group">
-            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-black text-lg md:text-xl italic bg-[#0400FF] text-white shadow-[0_0_15px_rgba(4,0,255,0.4)]">D</div>
+            
+            {/* LOGO NOVA AQUI NO LUGAR DO "D" */}
+            <img 
+              src={logoDotweb} 
+              alt="Logo Dotweb" 
+              className="w-8 h-8 md:w-10 md:h-10 object-contain group-hover:scale-110 transition-transform duration-300" 
+            />
+
             <span className="font-black text-xl md:text-2xl tracking-tighter uppercase hidden sm:block text-black">DOTWEB</span>
           </div>
           <button onClick={voltarInicio} className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-[#0400FF] transition-colors uppercase tracking-widest">
