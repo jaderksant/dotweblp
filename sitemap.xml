@@ -6,5 +6,4 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-  <!-- Como seu site é SPA, o Google vai indexar a home e ler o JS para achar os links -->
 </urlset>
